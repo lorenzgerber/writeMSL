@@ -1,36 +1,45 @@
 export <- function()
 {
-  S		<-	t(SPECTRUM[,choice])
-  RT		<-	VARID2[choice]
-  NAME	<-	as.matrix(VARID1[choice])
-  ID		<-	cbind(round(RT,2),NAME)
 
-  for(j in 1:nrow(ID)){
-    s				<-	S[j,]
-    s				<-	s/max(s)*999
-    s[round(s)<1.5]	<-	0
-    N				<-	which(s == 0)
+  fileOut	<-	file("gerberetal2012.msl","a+")
 
-    if(length(N)){
-      s	<-	s[-N]
-      MZ	<-	SCAN_RANGE[-N]
+  for(currentRow in 1:nrow(combined)){
+    cat(file = fileOut, "NAME: ", paste(combined[currentRow,1],collapse=" "),"\n", sep="")
+    cat(file = fileOut, "RI: ", paste('0.000', sep=''),"\n",sep="")
+    cat(file = fileOut, "RT: ", paste('0.000', sep=''),"\n",sep="")
+    cat(file = fileOut, "COMMENTS: ", paste(combined[currentRow,3],collapse=" "), "\n", sep="")
+    cat(file = fileOut, "SOURCE: Gerber et al. 2012\n", sep="")
+    numPeaks <- 1
+    for(checkNumPeak in seq(6,25,2))
+    {
+      if(combined[currentRow,checkNumPeak] != 0)
+      {
+        numPeaks <- numPeaks + 1
+      }
+    }
 
-    }else
-      MZ		<-	SCAN_RANGE
-    DATA	<-	cbind(MZ,round(s))
+    cat(file = fileOut, "NUM PEAKS: ", numPeaks,"\n", sep="")
+    cat(file= fileOut, paste('(',combined[currentRow,5],' 1000) ', sep=''))
+    rowBreak <- 2
+    for (mass in seq(6, 25, 2)){
+      if(combined[currentRow,mass] != 0)
+      {
+        cat(file=fileOut, paste('(', combined[currentRow,mass], ' ', combined[currentRow,mass+1]*10,') ',sep=''))
+      }
+      if (rowBreak == 5)
+      {
+        cat(file=fileOut, "\n")
+        rowBreak <- 0
+      }
+      rowBreak <- rowBreak + 1
 
-    cat("Name:", paste(ID[j,],collapse=" "),"\n",file=fid,sep="")
-    cat("Synon:Annotated:\n",file=fid,sep="")
-    cat("Synon:Classified:\n",file=fid,sep="")
-    cat("Synon:RI:", round(RI[j],1),"\n",file=fid,sep="")
-    cat("Synon:RT(s):", round(RT[j],1),"\n",file=fid,sep="")
-    cat("Synon:MCR-Reference:", VARID1[choice][j],"\n",file=fid,sep="")
-    cat("Synon:Date:",as.character(Sys.Date()),"\n",file=fid,sep="")
-    cat("Comments:","\n",file=fid,sep="")
-    cat("DB#:",j,"\n",file=fid,sep="")
-    cat("Num peaks:", length(MZ),"\n",file=fid,sep="")
-    cat(file=fid,paste(apply(DATA,1,function(DATA) paste(DATA,collapse= " ")),";",rep(c(rep("",3),"\n"),len=length(MZ)),sep="",collapse=" "),"\n")
+    }
+
+    cat(file=fileOut, paste('\n\n'))
   }
+
+  close(fileOut)
+
 }
 
 
